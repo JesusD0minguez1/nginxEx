@@ -1,0 +1,78 @@
+version: '3'
+services:
+  kafkaexporter:
+    image: danielqsj/kafka-exporter
+    command: --kafka.server=broker:29092
+    depends_on:
+      - broker
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+  broker:
+    container_name: broker
+    image: confluentinc/cp-kafka:7.3.0
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+  metrogamesapi :
+    build: ./MetroGameAPI
+    ports:
+      - "2050:3090"
+    environment:
+      - host=mongodb
+      - apiHost = localhost
+      - apiPort = 3090
+      - BROKER_SERVER_ADDRESS=broker:29092
+      - OFFERS_TOPIC=offers
+      - USERS_TOPIC=users
+  metrogamesapi2:
+    build: ./MetroGameAPI
+    ports:
+      - "2060:3090"
+    environment:
+      - host=mongodb
+      - apiHost = localhost
+      - apiPort = 3095
+      - BROKER_SERVER_ADDRESS=broker:29092
+      - OFFERS_TOPIC=offers
+      - USERS_TOPIC=users
+  nginx:
+    build: ./nginx
+    ports:
+      - "2000:80"
+    depends_on:
+      - metrogamesapi
+  mongodb:
+    image: "mongo:latest"
+    container_name: "apiDB"
+    ports:
+      - "2717:27017"
+  nodeemail:
+    build: ./NodeEmail
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    depends_on:
+      - metrogamesapi
+      - metrogamesapi2
+      - broker
+      - mongodb
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+
+volumes:
+  prometheus-data:

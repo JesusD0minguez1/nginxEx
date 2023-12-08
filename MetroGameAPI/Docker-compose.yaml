@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  apiService:
+    image: "retrogamesapi"
+    # container_name: "retroapi"
+    environment:
+      - host=apiDB
+      - apiHost = localhost
+      - apiPort = 3090
+    deploy:
+      replicas: 2
+  apiDB:
+    image: "mongo:latest"
+    container_name: "apiDB"
+    ports:
+      - "2717:27017"
+      

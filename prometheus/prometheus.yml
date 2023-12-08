@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+
+rule_files:
+  - alerts.yml
+
+scrape_configs:
+  - job_name: apiservices
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+        - 'prometheus:9090'
+        - 'anotherapi:1234'
+        - 'metrogamesapi:3090'
+  - job_name: streams
+    metric
+
+remote_write:
+  - url: https://prometheus-us-central1.grafana.net/api/prom/push
+    basic_auth:
+      username: 789698
+      password: eyJrIjoiMmUwNDY0YzdhY2ZmMjU4M2JjNTgyNTdhZDUxYmQ3YTUyMDI1MGZiYyIsIm4iOiJNZXRyb0dhbWVzQVBJX01ldHJpY3MiLCJpZCI6ODAxNzE2fQ=
